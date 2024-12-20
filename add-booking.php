@@ -1,29 +1,47 @@
 <?php
 session_start();
-//error_reporting(0);
+error_reporting(0);
 include('includes/config.php');
 if(strlen($_SESSION['alogin'])==0)
 	{	
 header('location:index.php');
 }
 else{
-if(isset($_POST['update']))
+	// Code for Booking
+if(isset($_POST['book']))
 {
-$wpaddress=$_POST['address'];	
-$wpcnumber=$_POST['contactno'];
-$ophrs=$_POST['openinghrs'];
-$email=$_POST['emailid'];
-
-$sql="update tblpages set detail=:wpaddress,openignHrs=:ophrs,phoneNumber=:wpcnumber,emailId=:email where type='contact'";
+$ptype=$_POST['packagetype'];
+$wpoint=$_POST['washingpoint'];   
+$fname=$_POST['fname'];
+$mobile=$_POST['contactno'];
+$date=$_POST['washdate'];
+$time=$_POST['washtime'];
+$message=$_POST['message'];
+$status='New';
+$bno=mt_rand(100000000, 999999999);
+$sql="INSERT INTO tblcarwashbooking(bookingId,packageType,carWashPoint,fullName,mobileNumber,washDate,washTime,message,status) VALUES(:bno,:ptype,:wpoint,:fname,:mobile,:date,:time,:message,:status)";
 $query = $dbh->prepare($sql);
-$query->bindParam(':ophrs',$ophrs,PDO::PARAM_STR);
-$query->bindParam(':wpaddress',$wpaddress,PDO::PARAM_STR);
-$query->bindParam(':wpcnumber',$wpcnumber,PDO::PARAM_STR);
-$query->bindParam(':email',$email,PDO::PARAM_STR);
+$query->bindParam(':bno',$bno,PDO::PARAM_STR);
+$query->bindParam(':ptype',$ptype,PDO::PARAM_STR);
+$query->bindParam(':wpoint',$wpoint,PDO::PARAM_STR);
+$query->bindParam(':fname',$fname,PDO::PARAM_STR);
+$query->bindParam(':mobile',$mobile,PDO::PARAM_STR);
+$query->bindParam(':date',$date,PDO::PARAM_STR);
+$query->bindParam(':time',$time,PDO::PARAM_STR);
+$query->bindParam(':message',$message,PDO::PARAM_STR);
+$query->bindParam(':status',$status,PDO::PARAM_STR);
 $query->execute();
-
- echo "<script>alert('Details updates successfully');</script>";
- echo "<script>window.location.href ='contact.php'</script>";
+$lastInsertId = $dbh->lastInsertId();
+if($lastInsertId)
+{
+ 
+  echo '<script>alert("Your booking done successfully. Booking number is "+"'.$bno.'")</script>';
+ echo "<script>window.location.href ='new-booking.php'</script>";
+}
+else 
+{
+ echo "<script>alert('Something went wrong. Please try again.');</script>";
+}
 
 }
 
@@ -31,7 +49,7 @@ $query->execute();
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>CWMS | Contact Us info</title>
+<title>CWMS | Add Car Washing Booking</title>
 
 <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
 <link href="css/bootstrap.min.css" rel='stylesheet' type='text/css' />
@@ -74,72 +92,104 @@ $query->execute();
 				</div>
 <!--heder end here-->
 	<ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="dashboard.php">Home</a><i class="fa fa-angle-right"></i>Contact us information</li>
+                <li class="breadcrumb-item"><a href="dashboard.php">Home</a><i class="fa fa-angle-right"></i>Add Car Washing Booking </li>
             </ol>
 		<!--grid-->
  	<div class="grid-form">
  
 <!---->
   <div class="grid-form1">
-  	       <h3>Update Contact Information</h3>
-<?php 
-$sql = "SELECT * from tblpages where type='contact'";
+  	       <h3>Add Car Washing Booking</h3>
+
+  	         <div class="tab-content">
+						<div class="tab-pane active" id="horizontal-form">
+							<form class="form-horizontal" name="washingpoint" method="post" enctype="multipart/form-data">
+								<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Package Type</label>
+									<div class="col-sm-8">
+								 <select name="packagetype" required class="form-control">
+                <option value="">Package Type</option>
+                <option value="1">BASIC CLEANING (shs.10000)</option>
+                 <option value="2">PREMIUM CLEANING (shs.20000)</option>
+                  <option value="3 ">COMPLEX CLEANING(shs.30000)</option>
+              </select>
+									</div>
+								</div>
+<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Washing Point</label>
+									<div class="col-sm-8">
+								<select name="washingpoint" required class="form-control">
+                <option value="">Select Washing Point</option>
+<?php $sql = "SELECT * from tblwashingpoints";
 $query = $dbh -> prepare($sql);
 $query->execute();
 $results=$query->fetchAll(PDO::FETCH_OBJ);
 foreach($results as $result)
-{       
-?>
-  	         <div class="tab-content">
-						<div class="tab-pane active" id="horizontal-form">
-							<form class="form-horizontal" name="washingpoint" method="post" enctype="multipart/form-data">
+{               ?>  
+    <option value="<?php echo htmlentities($result->id);?>"><?php echo htmlentities($result->washingPointName);?> (<?php echo htmlentities($result->washingPointAddress);?>)</option>
+<?php } ?>
+            </select>
+									</div>
+								</div>
 
 <div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Adress</label>
+									<label for="focusedinput" class="col-sm-2 control-label">Full Name</label>
 									<div class="col-sm-8">
-										<textarea class="form-control" name="address" id="address" placeholder="Address" required rows="4"><?php   echo $result->detail; ?></textarea>
+										<input type="text" name="fname" class="form-control" required placeholder="Full Name">
+									</div>
+								</div>
+
+
+
+								<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Mobile No</label>
+									<div class="col-sm-8">
+										<input type="text" name="contactno" class="form-control" pattern="[0-9]{10}" title="10 numeric characters only" required placeholder="Mobile No.">
+									</div>
+								</div>
+
+
+								<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Wash Date</label>
+									<div class="col-sm-8">
+									<input type="date" name="washdate" required class="form-control">
+									</div>
+								</div>
+
+	
+
+<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Wash Time</label>
+									<div class="col-sm-8">
+										<input type="time" name="washtime" required class="form-control">
 									</div>
 								</div>
 
 								<div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Opening Hours</label>
+									<label for="focusedinput" class="col-sm-2 control-label">Message (if any)</label>
 									<div class="col-sm-8">
-										<input type="text" class="form-control" name="openinghrs" id="openinghrs" placeholder="Opening Hour" value="<?php   echo $result->openignHrs; ?>" required>
+								<textarea name="message"  class="form-control" placeholder="Message if any"></textarea>
 									</div>
 								</div>
-<div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Email Id</label>
-									<div class="col-sm-8">
-										<input type="email" class="form-control" name="emailid" id="emailid" placeholder="Email Id" required value="<?php   echo $result->emailId; ?>">
-									</div>
-								</div>
-
-
-<div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Contact Number</label>
-									<div class="col-sm-8">
-										<input type="text" class="form-control" name="contactno" id="contactno" placeholder="Contact Number" required value="<?php   echo $result->phoneNumber; ?>">
-									</div>
-								</div>
-
-
-
-	
-
-
 														
 	
 
+					
 								<div class="row">
 			<div class="col-sm-8 col-sm-offset-2">
-				<button type="submit" name="update" class="btn-primary btn">Update</button>
+				<button type="submit" name="book" class="btn-primary btn">Add</button>
+
+				<button type="reset" class="btn-inverse btn">Reset</button>
 			</div>
 		</div>
-							
+						
+						
+						
 					</div>
+					
 					</form>
 
-     <?php }  ?>
+     
       
 
       

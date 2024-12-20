@@ -1,29 +1,34 @@
 <?php
 session_start();
-//error_reporting(0);
+error_reporting(0);
 include('includes/config.php');
 if(strlen($_SESSION['alogin'])==0)
 	{	
 header('location:index.php');
 }
 else{
-if(isset($_POST['update']))
+if(isset($_POST['submit']))
 {
+$wpname=$_POST['washingpointname'];
 $wpaddress=$_POST['address'];	
 $wpcnumber=$_POST['contactno'];
-$ophrs=$_POST['openinghrs'];
-$email=$_POST['emailid'];
 
-$sql="update tblpages set detail=:wpaddress,openignHrs=:ophrs,phoneNumber=:wpcnumber,emailId=:email where type='contact'";
+$sql="INSERT INTO tblwashingpoints(washingPointName,washingPointAddress,contactNumber) VALUES(:wpname,:wpaddress,:wpcnumber)";
 $query = $dbh->prepare($sql);
-$query->bindParam(':ophrs',$ophrs,PDO::PARAM_STR);
+$query->bindParam(':wpname',$wpname,PDO::PARAM_STR);
 $query->bindParam(':wpaddress',$wpaddress,PDO::PARAM_STR);
 $query->bindParam(':wpcnumber',$wpcnumber,PDO::PARAM_STR);
-$query->bindParam(':email',$email,PDO::PARAM_STR);
 $query->execute();
-
- echo "<script>alert('Details updates successfully');</script>";
- echo "<script>window.location.href ='contact.php'</script>";
+$lastInsertId = $dbh->lastInsertId();
+if($lastInsertId)
+{
+ echo "<script>alert('Car wash point added successfully');</script>";
+ echo "<script>window.location.href ='addcar-washpoint.php'</script>";
+}
+else 
+{
+ echo "<script>alert('Something went wrong. Please try again.');</script>";
+}
 
 }
 
@@ -31,7 +36,7 @@ $query->execute();
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>CWMS | Contact Us info</title>
+<title>CWMS | Add Washing Point</title>
 
 <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
 <link href="css/bootstrap.min.css" rel='stylesheet' type='text/css' />
@@ -74,51 +79,35 @@ $query->execute();
 				</div>
 <!--heder end here-->
 	<ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="dashboard.php">Home</a><i class="fa fa-angle-right"></i>Contact us information</li>
+                <li class="breadcrumb-item"><a href="dashboard.php">Home</a><i class="fa fa-angle-right"></i>Add Washing Point </li>
             </ol>
 		<!--grid-->
  	<div class="grid-form">
  
 <!---->
   <div class="grid-form1">
-  	       <h3>Update Contact Information</h3>
-<?php 
-$sql = "SELECT * from tblpages where type='contact'";
-$query = $dbh -> prepare($sql);
-$query->execute();
-$results=$query->fetchAll(PDO::FETCH_OBJ);
-foreach($results as $result)
-{       
-?>
+  	       <h3>Add Washing Point</h3>
+
   	         <div class="tab-content">
 						<div class="tab-pane active" id="horizontal-form">
 							<form class="form-horizontal" name="washingpoint" method="post" enctype="multipart/form-data">
-
+								<div class="form-group">
+									<label for="focusedinput" class="col-sm-2 control-label">Car Wash Point Name</label>
+									<div class="col-sm-8">
+										<input type="text" class="form-control" name="washingpointname" id="washingpointname" placeholder="Washing Point Name" required>
+									</div>
+								</div>
 <div class="form-group">
 									<label for="focusedinput" class="col-sm-2 control-label">Adress</label>
 									<div class="col-sm-8">
-										<textarea class="form-control" name="address" id="address" placeholder="Address" required rows="4"><?php   echo $result->detail; ?></textarea>
+										<textarea class="form-control" name="address" id="address" placeholder="Address" required rows="4"></textarea>
 									</div>
 								</div>
-
-								<div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Opening Hours</label>
-									<div class="col-sm-8">
-										<input type="text" class="form-control" name="openinghrs" id="openinghrs" placeholder="Opening Hour" value="<?php   echo $result->openignHrs; ?>" required>
-									</div>
-								</div>
-<div class="form-group">
-									<label for="focusedinput" class="col-sm-2 control-label">Email Id</label>
-									<div class="col-sm-8">
-										<input type="email" class="form-control" name="emailid" id="emailid" placeholder="Email Id" required value="<?php   echo $result->emailId; ?>">
-									</div>
-								</div>
-
 
 <div class="form-group">
 									<label for="focusedinput" class="col-sm-2 control-label">Contact Number</label>
 									<div class="col-sm-8">
-										<input type="text" class="form-control" name="contactno" id="contactno" placeholder="Contact Number" required value="<?php   echo $result->phoneNumber; ?>">
+										<input type="text" class="form-control" name="contactno" id="contactno" placeholder="Contact Number" required>
 									</div>
 								</div>
 
@@ -132,14 +121,21 @@ foreach($results as $result)
 
 								<div class="row">
 			<div class="col-sm-8 col-sm-offset-2">
-				<button type="submit" name="update" class="btn-primary btn">Update</button>
+				<button type="submit" name="submit" class="btn-primary btn">Add</button>
+
+				<button type="reset" class="btn-inverse btn">Reset</button>
 			</div>
 		</div>
-							
+						
+					
+						
+						
+						
 					</div>
+					
 					</form>
 
-     <?php }  ?>
+     
       
 
       
